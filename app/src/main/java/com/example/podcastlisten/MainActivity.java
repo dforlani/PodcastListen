@@ -2,6 +2,7 @@ package com.example.podcastlisten;
 
 import android.os.Bundle;
 
+import com.example.podcastlisten.models.Podcast;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -64,6 +65,11 @@ public class MainActivity extends AppCompatActivity {
 //                        Log.w(TAG, "Error adding document", e);
 //                    }
 //                });
+
+        Podcast pod = new Podcast("oi", "mudfsdfld");
+        pod.salvaPodcast();
+
+
     }
 
 

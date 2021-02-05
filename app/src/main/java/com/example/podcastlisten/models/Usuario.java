@@ -81,4 +81,12 @@ public class Usuario extends ModelFirestore {
     public void setGoogle_uid(String google_id) {
         this.google_uid = google_id;
     }
+
+    @Override
+    Map<String, Object> toMap() {
+        Map<String, Object> data = new HashMap<>();
+        data.put(CAMPO_ID, id);
+        data.put(CAMPO_EMAIL, email);
+        return  data;
+    }
 }

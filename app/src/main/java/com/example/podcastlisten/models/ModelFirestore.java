@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.example.podcastlisten.util.Preferencias;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -21,10 +22,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class ModelFirestore {
+public abstract  class ModelFirestore {
     private static final String TAG = "ModelFirestore.class:";
     public static FirebaseFirestore db;
     public static FirebaseStorage storage;
+
+    /**
+     * Campos de id que serão salvos com o id restornado pelo Firestore
+     */
+    public  static final String CAMPO_ID =  "id";
+    protected String id;
+
+
+    abstract   Map<String, Object> toMap();
 
     public ModelFirestore() {
 
@@ -185,7 +195,9 @@ public class ModelFirestore {
         // Add a new document with a generated id.
         //teste();
         DocumentReference doc = db.collection(colecao).document(documentId);
-
+        String id = doc.getId();
+        data.put(Podcast.CAMPO_ID, id);
+        Log.d("PODCAASSSSSSSSSSSSSSSST", id );
         doc.set(data)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -204,7 +216,35 @@ public class ModelFirestore {
         // [END add_document]
     }
 
-    public void addSubDocument(Analise analise, String colecaoParent, String documentIdParent, String colecaoSon, Map<String, Object> data) {
+    public static void addSubDocumentToUser(String colecao, ModelFirestore object) {
+
+        String email = Preferencias.getEmail();
+        DocumentReference col;
+        Map<String, Object>  data = object.toMap();
+
+        //caso tenha uma id, vai utilizá-la para atualizar os dados, senão, vai buscar a nova ID e inserir junto do objeto
+        if(object.id != null){
+            col = db.collection(Usuario.COLECAO).document(email).collection(colecao).document(object.id);
+        }else
+        {
+              col = db.collection(Usuario.COLECAO).document(email).collection(colecao).document();
+            String id = col.getId();
+            data.put(Podcast.CAMPO_ID, id);
+        }
+
+        col.set(data)
+               // .addOnSuccessListener(onSuccessListener)
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error adding document", e);
+
+                    }
+                });
+    }
+
+
+    public void addSubDocument(Podcast analise, String colecaoParent, String documentIdParent, String colecaoSon, Map<String, Object> data) {
 
         CollectionReference col = db.collection(colecaoParent).document(documentIdParent).collection(colecaoSon);
         OnSuccessListener onSuccessListener = new OnSucessListenerAnalise(analise);
@@ -256,10 +296,13 @@ public class ModelFirestore {
         });
     }
 
+    /**
+     * Classe Listenes para ser utilizada ao inserir ou atualizar objeto, para se manipular um objeto APÓS o sucesso de sua inserção
+     */
     class OnSucessListenerAnalise implements OnSuccessListener<DocumentReference> {
-        private Analise analise;
+        private Podcast analise;
 
-        public OnSucessListenerAnalise(Analise analise) {
+        public OnSucessListenerAnalise(Podcast analise) {
             super();
             this.analise = analise;
         }
